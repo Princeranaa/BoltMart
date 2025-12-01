@@ -1,6 +1,7 @@
 const User = require("../models/User.Model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const redis = require("../config/redis");
 
 exports.register = async (req, res) => {
   try {
@@ -116,5 +117,43 @@ exports.login = async (req, res) => {
 };
 
 exports.getCurrentUser = async (req, res) => {
-  return res.status(200).json({ user: req.user });
+  try {
+    // Convert Mongoose document to plain object
+    const userObj = req.user.toObject();
+    
+    // Create clean user object with id (not _id)
+    const user = {
+      id: userObj._id.toString(),
+      username: userObj.username,
+      email: userObj.email,
+      fullName: userObj.fullName,
+      role: userObj.role,
+      addresses: userObj.addresses || []
+    };
+    
+    return res.status(200).json({ user });
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching user data" });
+  }
 };
+
+exports.logout = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (token) {
+      await redis.set(`blacklist:${token}`, "true", "EX", 24 * 60 * 60);
+    }
+
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+    });
+
+    res.status(200).json({
+      message: "Logout successful",
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+};
+

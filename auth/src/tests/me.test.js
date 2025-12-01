@@ -369,12 +369,22 @@ describe("GET /api/auth/me", () => {
       expect(response.headers["content-type"]).toMatch(/application\/json/);
     });
 
+    /* it("should have correct user ID format", async () => {
+      const response = await request(app)
+        .get("/api/auth/me")
+        .set("Authorization", `Bearer ${validToken}`);
+
+      expect(response.status).toBe(200);
+      expect(mongoose.Types.ObjectId.isValid(response.body.user_.id)).toBe(true);
+    }); */
+
     it("should have correct user ID format", async () => {
       const response = await request(app)
         .get("/api/auth/me")
         .set("Authorization", `Bearer ${validToken}`);
 
       expect(response.status).toBe(200);
+      // Fixed typo: user_.id -> user.id
       expect(mongoose.Types.ObjectId.isValid(response.body.user.id)).toBe(true);
     });
 
