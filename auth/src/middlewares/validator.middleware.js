@@ -12,16 +12,22 @@ const responseWithValidationErrors = (req, res, next) => {
 
 const registerValidator = [
   body("username")
-    .notEmpty().withMessage("Username is required")
-    .isLength({ min: 3 }).withMessage("Username must be at least 3 characters"),
+    .notEmpty()
+    .withMessage("Username is required")
+    .isLength({ min: 3 })
+    .withMessage("Username must be at least 3 characters"),
 
   body("email")
-    .notEmpty().withMessage("Email is required")
-    .isEmail().withMessage("Invalid email format"),
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email format"),
 
   body("password")
-    .notEmpty().withMessage("Password is required")
-    .isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
+    .notEmpty()
+    .withMessage("Password is required")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters"),
 
   body("firstname").notEmpty().withMessage("First name is required"),
 
@@ -46,10 +52,7 @@ const loginValidator = [
   },
 
   // VALIDATION RULES (only run when required fields are filled)
-  body("email")
-    .optional()
-    .isEmail()
-    .withMessage("Invalid email address"),
+  body("email").optional().isEmail().withMessage("Invalid email address"),
 
   body("username")
     .optional()
@@ -63,7 +66,17 @@ const loginValidator = [
   responseWithValidationErrors,
 ];
 
+const addressValidator = [
+  body("street").notEmpty().withMessage("Street is required"),
+  body("city").notEmpty().withMessage("City is required"),
+  body("state").notEmpty().withMessage("State is required"),
+  body("country").notEmpty().withMessage("Country is required"),
+  body("zip")
+    .notEmpty()
+    .withMessage("Pincode is required")
+    .isNumeric()
+    .withMessage("Pincode must be numeric"),
+  responseWithValidationErrors,
+];
 
-
-
-module.exports = { registerValidator, loginValidator };
+module.exports = { registerValidator, loginValidator, addressValidator };

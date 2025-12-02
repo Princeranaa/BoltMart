@@ -120,7 +120,7 @@ exports.getCurrentUser = async (req, res) => {
   try {
     // Convert Mongoose document to plain object
     const userObj = req.user.toObject();
-    
+
     // Create clean user object with id (not _id)
     const user = {
       id: userObj._id.toString(),
@@ -128,9 +128,9 @@ exports.getCurrentUser = async (req, res) => {
       email: userObj.email,
       fullName: userObj.fullName,
       role: userObj.role,
-      addresses: userObj.addresses || []
+      addresses: userObj.addresses || [],
     };
-    
+
     return res.status(200).json({ user });
   } catch (error) {
     return res.status(500).json({ message: "Error fetching user data" });
@@ -153,7 +153,86 @@ exports.logout = async (req, res) => {
       message: "Logout successful",
     });
   } catch (error) {
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 };
+
+exports.getAddresses = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    res.status(200).json({ addresses: user.addresses });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
+
+exports.addAddress = async (req, res) => {
+  try {
+    const { street, city, state, country, zip, isDefault } = req.body;
+    const user = await User.findById(req.user.id);
+
+    if (isDefault) {
+      user.addresses.forEach((addr) => (addr.isDefault = false));
+    }
+
+    user.addresses.push({
+      street,
+      city,
+      state,
+      country,
+      zip,
+      isDefault,
+    });
+    await user.save();
+
+    res.status(201).json({
+      message: "Address added successfully",
+      addresses: user.addresses,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
+
+
+exports.deleteAddress = async (req, res) => {
+
+    const id = req.user.id;
+    const { addressId } = req.params;
+
+
+    const isAddressExists = await User.findOne({ _id: id, 'addresses._id': addressId });
+
+
+    if (!isAddressExists) {
+        return res.status(404).json({ message: "Address not found" });
+    }
+
+    const user = await User.findOneAndUpdate({ _id: id }, {
+        $pull: {
+            addresses: { _id: addressId }
+        }
+    }, { new: true });
+
+    if (!user) {
+        return res.status(404).json({ message: "User not found" });
+    }
+
+    const addressExists = user.addresses.some(addr => addr._id.toString() === addressId);
+    if (addressExists) {
+        return res.status(500).json({ message: "Failed to delete address" });
+    }
+
+    return res.status(200).json({
+        message: "Address deleted successfully",
+        addresses: user.addresses
+    });
+
+}
 
