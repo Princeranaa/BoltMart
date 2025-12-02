@@ -5,7 +5,7 @@ const redis = require("../config/redis");
 
 exports.register = async (req, res) => {
   try {
-    const { username, email, password, firstname, lastname } = req.body;
+    const { username, email, password, firstname, lastname, role } = req.body;
 
     const existingUser = await User.findOne({
       $or: [{ email }, { username }],
