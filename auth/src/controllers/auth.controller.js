@@ -24,6 +24,7 @@ exports.register = async (req, res) => {
         firstname,
         lastname,
       },
+      role: role || "user",
     });
 
     const token = jwt.sign(
@@ -200,39 +201,42 @@ exports.addAddress = async (req, res) => {
   }
 };
 
-
 exports.deleteAddress = async (req, res) => {
+  const id = req.user.id;
+  const { addressId } = req.params;
 
-    const id = req.user.id;
-    const { addressId } = req.params;
+  const isAddressExists = await User.findOne({
+    _id: id,
+    "addresses._id": addressId,
+  });
 
+  if (!isAddressExists) {
+    return res.status(404).json({ message: "Address not found" });
+  }
 
-    const isAddressExists = await User.findOne({ _id: id, 'addresses._id': addressId });
+  const user = await User.findOneAndUpdate(
+    { _id: id },
+    {
+      $pull: {
+        addresses: { _id: addressId },
+      },
+    },
+    { new: true }
+  );
 
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
 
-    if (!isAddressExists) {
-        return res.status(404).json({ message: "Address not found" });
-    }
+  const addressExists = user.addresses.some(
+    (addr) => addr._id.toString() === addressId
+  );
+  if (addressExists) {
+    return res.status(500).json({ message: "Failed to delete address" });
+  }
 
-    const user = await User.findOneAndUpdate({ _id: id }, {
-        $pull: {
-            addresses: { _id: addressId }
-        }
-    }, { new: true });
-
-    if (!user) {
-        return res.status(404).json({ message: "User not found" });
-    }
-
-    const addressExists = user.addresses.some(addr => addr._id.toString() === addressId);
-    if (addressExists) {
-        return res.status(500).json({ message: "Failed to delete address" });
-    }
-
-    return res.status(200).json({
-        message: "Address deleted successfully",
-        addresses: user.addresses
-    });
-
-}
-
+  return res.status(200).json({
+    message: "Address deleted successfully",
+    addresses: user.addresses,
+  });
+};
