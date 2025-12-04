@@ -1,8 +1,13 @@
 require("dotenv").config();
-const app  = require("./src/app");
+const app = require("./src/app");
+const { initSocketServer } = require("./src/sockets/socket.server");
+const http = require("http");
+
+const PORT = process.env.PORT
+const httpServer = http.createServer(app);
+initSocketServer(httpServer);
 
 
-
-app.listen(3006, ()=>{
-    console.log(`ai buddy service start on the 3006 port`)
-})
+httpServer.listen(PORT, () => {
+  console.log(`ai buddy service start on the ${PORT} port`);
+});
