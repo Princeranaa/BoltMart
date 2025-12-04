@@ -9,5 +9,5 @@ const PORT = process.env.PORT || 3005;
 
 
 app.listen(PORT, ()=>{
-    console.log("payment server is running on port 3004");
+    console.log("payment server is running on port 3005");
 })
